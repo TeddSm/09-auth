@@ -7,7 +7,6 @@ import {
 import { Metadata } from "next";
 import { fetchNotes } from "@/lib/api/serverApi";
 import { NoteList } from "@/components/NoteList/NoteList";
-import css from "./NotesFilter.module.css";
 
 interface Props {
   params: Promise<{ slug?: string[] }>;
@@ -34,7 +33,7 @@ export default async function NotesFilterPage({ params }: Props) {
   });
 
   return (
-    <div className={css.container}>
+    <div>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <NoteList notes={data?.notes || []} />
       </HydrationBoundary>
