@@ -2,6 +2,13 @@ import { api } from "./api";
 import type { Note } from "@/types/note";
 import { User } from "@/types/user";
 
+interface FetchNotesParams {
+  page?: number;
+  perPage?: number;
+  tag?: string;
+  search?: string;
+}
+
 interface FetchNotesResponse {
   notes: Note[];
   totalPages: number;
@@ -26,12 +33,17 @@ interface SignInResponse {
   user: User;
 }
 
+interface SessionResponse {
+  authenticated: boolean;
+  user: User | null;
+}
+
 export const fetchNotes = async ({
   page = 1,
   perPage = 12,
   tag = "",
   search = "",
-}) => {
+}: FetchNotesParams = {}): Promise<FetchNotesResponse> => {
   const params: Record<string, string | number> = { page, perPage };
   if (search && search.trim() !== "") params.search = search;
   if (tag && tag !== "" && tag !== "all") params.tag = tag;
@@ -40,38 +52,41 @@ export const fetchNotes = async ({
   return response.data;
 };
 
-export const fetchNoteById = async (id: string) => {
+export const fetchNoteById = async (id: string): Promise<Note> => {
   const response = await api.get<Note>(`/notes/${id}`);
   return response.data;
 };
 
 export const createNote = async (
   note: Omit<Note, "id" | "createdAt" | "updatedAt">
-) => {
+): Promise<Note> => {
   const response = await api.post<Note>("/notes", note);
   return response.data;
 };
 
-export const deleteNote = async (id: string) => {
+export const deleteNote = async (id: string): Promise<Note> => {
   const response = await api.delete<Note>(`/notes/${id}`);
   return response.data;
 };
 
-export const logout = async () => {
-  const response = await api.post("/auth/logout");
+export const logout = async (): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>("/auth/logout");
   return response.data;
 };
 
-export const checkSession = async () => {
-  return await api.get("/auth/session");
+export const checkSession = async (): Promise<SessionResponse> => {
+  const response = await api.get<SessionResponse>("/auth/session");
+  return response.data;
 };
 
-export const getMe = async () => {
+export const getMe = async (): Promise<User> => {
   const response = await api.get<User>("/users/me");
   return response.data;
 };
 
-export const updateMe = async (userData: { username: string }) => {
+export const updateMe = async (userData: {
+  username: string;
+}): Promise<User> => {
   const response = await api.patch<User>("/users/me", userData);
   return response.data;
 };

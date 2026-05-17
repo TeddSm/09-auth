@@ -3,12 +3,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/lib/api/clientApi";
-import { useAuthStore } from "@/lib/store/authStore";
+import { useAuth } from "@/components/AuthProvider/AuthProvider";
 import css from "./SignUp.module.css";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const setUser = useAuthStore((state) => state.setUser);
+  const { setUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -35,39 +35,49 @@ export default function SignUpPage() {
   };
 
   return (
-    <main className={css.mainContent}>
-      <h1 className={css.formTitle}>Sign up</h1>
-      <form className={css.form} onSubmit={handleSubmit}>
-        <div className={css.formGroup}>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            className={css.input}
-            required
-          />
-        </div>
-
-        <div className={css.formGroup}>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            name="password"
-            className={css.input}
-            required
-          />
-        </div>
-
-        <div className={css.actions}>
-          <button type="submit" className={css.submitButton}>
-            Register
-          </button>
-        </div>
+    <div className={css.container}>
+      <form onSubmit={handleSubmit} className={css.form}>
+        <h1 className={css.title}>Sign Up</h1>
 
         {error && <p className={css.error}>{error}</p>}
+
+        <label className={css.label}>
+          Username
+          <input
+            type="text"
+            name="username"
+            required
+            className={css.input}
+            placeholder="Enter your username"
+          />
+        </label>
+
+        <label className={css.label}>
+          Email
+          <input
+            type="email"
+            name="email"
+            required
+            className={css.input}
+            placeholder="Enter your email"
+          />
+        </label>
+
+        <label className={css.label}>
+          Password
+          <input
+            type="password"
+            name="password"
+            required
+            className={css.input}
+            placeholder="Enter your password"
+          />
+        </label>
+
+        <button type="submit" className={css.button}>
+          Register
+        </button>
       </form>
-    </main>
+    </div>
   );
 }

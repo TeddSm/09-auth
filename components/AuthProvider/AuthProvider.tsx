@@ -27,10 +27,8 @@ export default function AuthProvider({
     const initAuth = async () => {
       try {
         const sessionResponse = await checkSession();
-
-        if (sessionResponse && sessionResponse.status === 200) {
+        if (sessionResponse && sessionResponse.authenticated) {
           const userData = await getMe();
-
           setUser(userData);
           setIsAuthenticated(true);
         }
