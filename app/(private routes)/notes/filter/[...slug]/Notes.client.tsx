@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
-import { fetchNotes } from "@/lib/api";
+import { fetchNotes } from "@/lib/api/clientApi";
 import { NoteList } from "@/components/NoteList/NoteList";
 import { SearchBox } from "@/components/SearchBox/SearchBox";
 import { Pagination } from "@/components/Pagination/Pagination";
-import Link from "next/link"; 
+import Link from "next/link";
 
 interface NotesClientProps {
   currentTag: string;
@@ -31,31 +31,46 @@ export default function NotesClient({ currentTag }: NotesClientProps) {
 
   return (
     <div className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <h1>Notes: {currentTag || "All"}</h1>
-        
-        <Link 
-          href="/notes/action/create" 
-          style={{ 
-            padding: '10px 20px', 
-            backgroundColor: '#0070f3', 
-            color: 'white', 
-            borderRadius: '5px',
-            textDecoration: 'none'
+
+        <Link
+          href="/notes/action/create"
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#0070f3",
+            color: "white",
+            borderRadius: "5px",
+            textDecoration: "none",
           }}
         >
           Create note +
         </Link>
       </div>
 
-      <SearchBox value={searchQuery} onChange={(v) => { setSearchQuery(v); setPage(1); }} />
+      <SearchBox
+        value={searchQuery}
+        onChange={(v) => {
+          setSearchQuery(v);
+          setPage(1);
+        }}
+      />
 
       {isLoading ? (
         <p>Loading...</p>
       ) : (
         <>
-          <NoteList notes={notes} onNoteClick={(id) => console.log('Navigate to note', id)} />
-          
+          <NoteList
+            notes={notes}
+            onNoteClick={(id) => console.log("Navigate to note", id)}
+          />
+
           {totalPages > 1 && (
             <Pagination
               currentPage={page}
