@@ -7,6 +7,25 @@ interface FetchNotesResponse {
   totalPages: number;
 }
 
+interface SignUpRequest {
+  username: string;
+  email: string;
+  password: string;
+}
+
+interface SignUpResponse {
+  user: User;
+}
+
+interface SignInRequest {
+  email: string;
+  password: string;
+}
+
+interface SignInResponse {
+  user: User;
+}
+
 export const fetchNotes = async ({
   page = 1,
   perPage = 12,
@@ -44,28 +63,18 @@ export const logout = async () => {
 };
 
 export const checkSession = async () => {
-  const response = await api.get("/auth/session");
-  return response.data;
+  return await api.get("/auth/session");
 };
 
 export const getMe = async () => {
-  const response = await api.get("/users/me");
+  const response = await api.get<User>("/users/me");
   return response.data;
 };
 
-export const updateMe = async (userData: Record<string, unknown>) => {
-  const response = await api.patch("/users/me", userData);
+export const updateMe = async (userData: { username: string }) => {
+  const response = await api.patch<User>("/users/me", userData);
   return response.data;
 };
-
-interface SignUpRequest {
-  email: string;
-  password?: string;
-}
-
-interface SignUpResponse {
-  user: User;
-}
 
 export const register = async (
   credentials: SignUpRequest
@@ -77,26 +86,9 @@ export const register = async (
   return response.data;
 };
 
-interface SignInRequest {
-  email: string;
-  password?: string;
-}
-
-interface SignInResponse {
-  user: User;
-}
-
 export const login = async (
   credentials: SignInRequest
 ): Promise<SignInResponse> => {
   const response = await api.post<SignInResponse>("/auth/login", credentials);
-  return response.data;
-};
-
-export const refreshSession = async (refreshToken: string) => {
-  const response = await api.post<{
-    accessToken: string;
-    refreshToken: string;
-  }>("/auth/refresh", { refreshToken });
   return response.data;
 };

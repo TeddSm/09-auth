@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { refreshSession } from "./lib/api/clientApi";
+import { refreshSession } from "./lib/api/serverApi";
+
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
+
   const accessToken = request.cookies.get("accessToken")?.value;
   const refreshToken = request.cookies.get("refreshToken")?.value;
 
@@ -20,23 +22,28 @@ export default async function proxy(request: NextRequest) {
 
       if (newTokens && newTokens.accessToken) {
         isAuthenticated = true;
+
         response.cookies.set("accessToken", newTokens.accessToken, {
           httpOnly: true,
+          secure: true,
         });
         if (newTokens.refreshToken) {
           response.cookies.set("refreshToken", newTokens.refreshToken, {
             httpOnly: true,
+            secure: true,
           });
         }
       }
     } catch (error) {
-      console.error("Failed to refresh token in proxy:", error);
+      console.error("Middleware token refresh failed:", error);
       isAuthenticated = false;
     }
   }
+
   if (isPrivateRoute && !isAuthenticated) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
+
   if (isPublicAuthRoute && isAuthenticated) {
     return NextResponse.redirect(new URL("/", request.url));
   }

@@ -16,11 +16,12 @@ export default function SignUpPage() {
     setError(null);
 
     const formData = new FormData(event.currentTarget);
+    const username = formData.get("username") as string;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
     try {
-      const data = await register({ email, password });
+      const data = await register({ username, email, password });
       setUser(data.user);
       router.push("/profile");
     } catch (err: unknown) {

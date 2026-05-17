@@ -5,15 +5,18 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider/AuthProvider";
 import { logout } from "@/lib/api/clientApi";
 import css from "./AuthNavigation.module.css";
+import { useRouter } from "next/navigation";
 
 export default function AuthNavigation() {
   const { isAuthenticated, user, setUser, setIsAuthenticated } = useAuth();
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
       await logout();
       setUser(null);
       setIsAuthenticated(false);
+      router.push("/sign-in");
     } catch (error) {
       console.error("Logout failed:", error);
     }
