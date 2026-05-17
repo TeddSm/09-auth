@@ -1,56 +1,49 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store/authStore";
+import React from "react";
+import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider/AuthProvider";
 import { logout } from "@/lib/api/clientApi";
 import css from "./AuthNavigation.module.css";
 
-const AuthNavigation = () => {
-  const router = useRouter();
-  const { isAuthenticated, user, clearIsAuthenticated } = useAuthStore();
+export default function AuthNavigation() {
+  const { isAuthenticated, user, setUser, setIsAuthenticated } = useAuth();
 
   const handleLogout = async () => {
     try {
       await logout();
-      clearIsAuthenticated();
-      router.push("/sign-in");
+      setUser(null);
+      setIsAuthenticated(false);
     } catch (error) {
-      console.error("Logout failed", error);
+      console.error("Logout failed:", error);
     }
   };
 
   return (
-    <>
+    <nav className={css.navigation}>
       {isAuthenticated ? (
-        <>
-          <li className={css.navigationItem}>
-            <a href="/profile" className={css.navigationLink}>
-              Profile
-            </a>
-          </li>
-          <li className={css.navigationItem}>
-            <p className={css.userEmail}>{user?.email || "User email"}</p>
-            <button className={css.logoutButton} onClick={handleLogout}>
-              Logout
-            </button>
-          </li>
-        </>
+        <div className={css.authorizedBlock}>
+          <span className={css.userEmail}>{user?.email}</span>
+          <Link href="/profile" className={css.navigationLink}>
+            Profile
+          </Link>
+          <Link href="/notes" className={css.navigationLink}>
+            Notes
+          </Link>
+          <button onClick={handleLogout} className={css.logoutButton}>
+            Log Out
+          </button>
+        </div>
       ) : (
-        <>
-          <li className={css.navigationItem}>
-            <a href="/sign-in" className={css.navigationLink}>
-              Login
-            </a>
-          </li>
-          <li className={css.navigationItem}>
-            <a href="/sign-up" className={css.navigationLink}>
-              Sign up
-            </a>
-          </li>
-        </>
+        <div className={css.unauthorizedBlock}>
+          <Link href="/sign-in" className={css.navigationLink}>
+            Sign In
+          </Link>
+          <Link href="/sign-up" className={css.navigationLink}>
+            Sign Up
+          </Link>
+        </div>
       )}
-    </>
+    </nav>
   );
-};
-
-export default AuthNavigation;
+}

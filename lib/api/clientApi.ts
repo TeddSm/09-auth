@@ -92,3 +92,11 @@ export const login = async (
   const response = await api.post<SignInResponse>("/auth/login", credentials);
   return response.data;
 };
+
+export const refreshSession = async (refreshToken: string) => {
+  const response = await api.post<{
+    accessToken: string;
+    refreshToken: string;
+  }>("/auth/refresh", { refreshToken });
+  return response.data;
+};

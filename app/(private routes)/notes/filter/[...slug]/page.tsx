@@ -1,58 +1,43 @@
+import React from "react";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import { fetchNotes } from "@/lib/api/clientApi";
-import NotesClient from "./Notes.client";
 import { Metadata } from "next";
+import { fetchNotes } from "@/lib/api/serverApi";
+import { NoteList } from "@/components/NoteList/NoteList";
+import css from "./NotesFilter.module.css";
 
-interface FilterPageProps {
+interface Props {
   params: Promise<{ slug?: string[] }>;
 }
 
-interface MetaProps {
-  params: Promise<{ slug: string[] }>;
-}
-
-export async function generateMetadata({
-  params,
-}: MetaProps): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const filter = slug[0];
-  const title = `Notes - ${filter}`;
-  const description = `Notes filtered by ${filter}`;
-
+  const tag = slug?.[0] || "";
   return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url: `/notes/filter/${filter}`,
-      images: [
-        {
-          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
-        },
-      ],
-    },
+    title: `Notes - ${tag}`,
   };
 }
 
-export default async function FilteredNotesPage({ params }: FilterPageProps) {
+export default async function NotesFilterPage({ params }: Props) {
   const { slug } = await params;
-  const currentTag = slug?.[0] === "all" ? "" : slug?.[0] || "";
+  const tag = slug?.[0] || "";
+  const page = Number(slug?.[1]) || 1;
 
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ["notes", currentTag],
-    queryFn: () => fetchNotes({ tag: currentTag }),
+  const data = await queryClient.fetchQuery({
+    queryKey: ["notes", { page, tag }],
+    queryFn: () => fetchNotes({ page, tag }),
   });
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <NotesClient currentTag={currentTag} />
-    </HydrationBoundary>
+    <div className={css.container}>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <NoteList notes={data?.notes || []} />
+      </HydrationBoundary>
+    </div>
   );
 }

@@ -1,60 +1,64 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store/authStore";
-import { checkSession } from "@/lib/api/clientApi";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { checkSession, getMe } from "@/lib/api/clientApi";
+import { User } from "@/types/user";
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export default function AuthProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { setUser, clearIsAuthenticated, isAuthenticated } = useAuthStore();
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const verifySession = async () => {
-      const isPrivateRoute =
-        pathname.startsWith("/profile") || pathname.startsWith("/notes");
-
+    const initAuth = async () => {
       try {
-        const data = await checkSession();
-        if (data && data.user) {
-          setUser(data.user);
-        } else if (isPrivateRoute) {
-          clearIsAuthenticated();
-          router.push("/sign-in");
+        const sessionResponse = await checkSession();
+
+        if (sessionResponse && sessionResponse.status === 200) {
+          const userData = await getMe();
+
+          setUser(userData);
+          setIsAuthenticated(true);
         }
       } catch (error) {
-        if (isPrivateRoute) {
-          clearIsAuthenticated();
-          router.push("/sign-in");
-        }
+        console.error("Auth initialization failed:", error);
+        setUser(null);
+        setIsAuthenticated(false);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    verifySession();
-  }, [pathname, setUser, clearIsAuthenticated, router]);
+    initAuth();
+  }, []);
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <AuthContext.Provider
+      value={{ user, isAuthenticated, isLoading, setUser, setIsAuthenticated }}
+    >
+      {isLoading ? <div>Loading...</div> : children}
+    </AuthContext.Provider>
+  );
 }
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

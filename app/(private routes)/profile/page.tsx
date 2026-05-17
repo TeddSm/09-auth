@@ -1,46 +1,36 @@
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { Metadata } from "next";
+import { getMe } from "@/lib/api/serverApi";
 import css from "./Profile.module.css";
 
 export const metadata: Metadata = {
-  title: "Profile | NoteHub",
-  description: "User profile page",
-  openGraph: {
-    title: "Profile | NoteHub",
-    description: "User profile page",
-    url: "https://08-zustand-nu-ten.vercel.app/profile",
-    images: [
-      {
-        url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
-      },
-    ],
-    type: "website",
-  },
+  title: "Profile",
 };
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const user = await getMe();
+
   return (
-    <main className={css.mainContent}>
+    <div className={css.container}>
       <div className={css.profileCard}>
-        <div className={css.header}>
-          <h1 className={css.formTitle}>Profile Page</h1>
-          <a href="/profile/edit" className={css.editProfileButton}>
-            Edit Profile
-          </a>
-        </div>
         <div className={css.avatarWrapper}>
-          <img
-            src="Avatar"
+          <Image
+            src={user.avatar || "/default-avatar.png"}
             alt="User Avatar"
-            width={120}
-            height={120}
+            width={150}
+            height={150}
+            priority
             className={css.avatar}
           />
         </div>
-        <div className={css.profileInfo}>
-          <p>Username: your_username</p>
-          <p>Email: your_email@example.com</p>
-        </div>
+        <h1 className={css.username}>{user.username}</h1>
+        <p className={css.email}>{user.email}</p>
       </div>
-    </main>
+      <Link href="/profile/edit" className={css.editLink}>
+        Edit Profile
+      </Link>
+    </div>
   );
 }
