@@ -1,103 +1,64 @@
-import { api } from "./api";
-import type { AxiosResponse } from "axios";
+import { cookies } from "next/headers";
+import { api } from "./api"; // Переконайся, що імпорт твого екземпляра Axios правильний (дефолтний чи іменований)
 import type { Note } from "@/types/note";
 import { User } from "@/types/user";
+
+interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+const getAuthHeaders = async (): Promise<{ Cookie?: string }> => {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+  const refreshToken = cookieStore.get("refreshToken")?.value;
+
+  const cookieArray: string[] = [];
+  if (accessToken) cookieArray.push(`accessToken=${accessToken}`);
+  if (refreshToken) cookieArray.push(`refreshToken=${refreshToken}`);
+
+  if (cookieArray.length > 0) {
+    return { Cookie: cookieArray.join("; ") };
+  }
+  return {};
+};
+
+export const checkSession = async (): Promise<{ data: TokenResponse }> => {
+  const headers = await getAuthHeaders();
+  return await api.post<TokenResponse>("/auth/refresh", {}, { headers });
+};
+
+export const getMe = async (): Promise<User> => {
+  const headers = await getAuthHeaders();
+  const response = await api.get<User>("/users/me", { headers });
+  return response.data;
+};
+
+export const fetchNoteById = async (id: string): Promise<Note> => {
+  const headers = await getAuthHeaders();
+  const response = await api.get<Note>(`/notes/${id}`, { headers });
+  return response.data;
+};
+
+interface FetchNotesParams {
+  page?: number;
+  perPage?: number;
+  tag?: string;
+  search?: string;
+}
 
 interface FetchNotesResponse {
   notes: Note[];
   totalPages: number;
 }
 
-export const fetchNotes = async ({
-  page = 1,
-  perPage = 12,
-  tag = "",
-  search = "",
-}): Promise<FetchNotesResponse> => {
-  const params: Record<string, string | number> = { page, perPage };
-  if (search && search.trim() !== "") params.search = search;
-  if (tag && tag !== "" && tag !== "all") params.tag = tag;
-
-  const response = await api.get<FetchNotesResponse>("/notes", { params });
-  return response.data;
-};
-
-export const fetchNoteById = async (id: string): Promise<Note> => {
-  const response = await api.get<Note>(`/notes/${id}`);
-  return response.data;
-};
-
-export const createNote = async (
-  note: Omit<Note, "id" | "createdAt" | "updatedAt">
-): Promise<Note> => {
-  const response = await api.post<Note>("/notes", note);
-  return response.data;
-};
-
-export const deleteNote = async (id: string): Promise<Note> => {
-  const response = await api.delete<Note>(`/notes/${id}`);
-  return response.data;
-};
-
-export const logout = async () => {
-  const response = await api.post("/auth/logout");
-  return response.data;
-};
-
-export const checkSession = async (): Promise<AxiosResponse> => {
-  const response = await api.get("/auth/session");
-  return response;
-};
-
-export const getMe = async (): Promise<User> => {
-  const response = await api.get<User>("/users/me");
-  return response.data;
-};
-
-export const updateMe = async (userData: Record<string, unknown>) => {
-  const response = await api.patch("/users/me", userData);
-  return response.data;
-};
-
-interface SignUpRequest {
-  email: string;
-  password?: string;
-}
-
-interface SignUpResponse {
-  user: User;
-}
-
-export const register = async (
-  credentials: SignUpRequest
-): Promise<SignUpResponse> => {
-  const response = await api.post<SignUpResponse>(
-    "/auth/register",
-    credentials
-  );
-  return response.data;
-};
-
-interface SignInRequest {
-  email: string;
-  password?: string;
-}
-
-interface SignInResponse {
-  user: User;
-}
-
-export const login = async (
-  credentials: SignInRequest
-): Promise<SignInResponse> => {
-  const response = await api.post<SignInResponse>("/auth/login", credentials);
-  return response.data;
-};
-
-export const refreshSession = async (refreshToken: string) => {
-  const response = await api.post<{
-    accessToken: string;
-    refreshToken: string;
-  }>("/auth/refresh", { refreshToken });
+export const fetchNotes = async (
+  params: FetchNotesParams = {}
+): Promise<FetchNotesResponse> => {
+  const headers = await getAuthHeaders();
+  const response = await api.get<FetchNotesResponse>("/notes", {
+    params,
+    headers,
+  });
   return response.data;
 };

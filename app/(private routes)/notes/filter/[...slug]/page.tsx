@@ -1,42 +1,41 @@
-import React from "react";
 import {
-  dehydrate,
-  HydrationBoundary,
   QueryClient,
+  HydrationBoundary,
+  dehydrate,
 } from "@tanstack/react-query";
-import { Metadata } from "next";
 import { fetchNotes } from "@/lib/api/serverApi";
 import { NoteList } from "@/components/NoteList/NoteList";
 
-interface Props {
-  params: Promise<{ slug?: string[] }>;
+interface PageProps {
+  params: Promise<{
+    slug?: string[];
+  }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export default async function FilteredNotesPage({ params }: PageProps) {
   const { slug } = await params;
-  const tag = slug?.[0] || "";
-  return {
-    title: `Notes - ${tag}`,
-  };
-}
-
-export default async function NotesFilterPage({ params }: Props) {
-  const { slug } = await params;
-  const tag = slug?.[0] || "";
-  const page = Number(slug?.[1]) || 1;
+  const tag = slug && slug[0] === "tags" ? slug[1] : "all";
 
   const queryClient = new QueryClient();
 
-  const data = await queryClient.fetchQuery({
-    queryKey: ["notes", { page, tag }],
-    queryFn: () => fetchNotes({ page, tag }),
+  const fetchFilters = { tag, page: 1, perPage: 12, search: "" };
+
+  // Виконуємо запит безпосередньо для пропсів NoteList
+  const data = await fetchNotes(fetchFilters);
+
+  // Паралельно робимо prefetch для гідрації React Query, як вимагає ментор
+  await queryClient.prefetchQuery({
+    queryKey: ["notes", fetchFilters],
+    queryFn: () => fetchNotes(fetchFilters),
   });
 
   return (
-    <div>
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <NoteList notes={data?.notes || []} />
-      </HydrationBoundary>
-    </div>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <div>
+        <h1>Notes by tag: {tag}</h1>
+        {/* Передаємо масив нотаток, який вимагає твій NoteList */}
+        <NoteList notes={data.notes || data} />
+      </div>
+    </HydrationBoundary>
   );
 }
