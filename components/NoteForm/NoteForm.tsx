@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNoteStore } from "@/lib/store/noteStore";
-import { createNote } from "@/lib/api";
+import { createNote } from "@/lib/api/clientApi";
 import { Note } from "@/types/note";
 import css from "./NoteForm.module.css";
 
@@ -20,9 +20,9 @@ const NoteForm = () => {
     mutationFn: (newNote: CreateNotePayload) => createNote(newNote),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      
+
       clearDraft();
-      
+
       router.back();
     },
     onError: (error) => {
@@ -32,7 +32,9 @@ const NoteForm = () => {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setDraft({ [name]: value });
@@ -40,7 +42,7 @@ const NoteForm = () => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
+
     mutation.mutate(draft as CreateNotePayload);
   };
 
@@ -75,9 +77,9 @@ const NoteForm = () => {
 
       <div className={css.formGroup}>
         <label htmlFor="tag">Tag</label>
-        <select 
-          id="tag" 
-          name="tag" 
+        <select
+          id="tag"
+          name="tag"
           className={css.select}
           value={draft.tag}
           onChange={handleChange}
@@ -99,8 +101,8 @@ const NoteForm = () => {
         >
           Cancel
         </button>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className={css.submitButton}
           disabled={mutation.isPending}
         >

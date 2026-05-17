@@ -3,7 +3,8 @@ import "./globals.css";
 import { TanStackProvider } from "../components/TanStackProvider/TanStackProvider";
 import { Header } from "@/components/Header/Header";
 import { Footer } from "@/components/Footer/Footer";
-import { Roboto } from "next/font/google"; 
+import { Roboto } from "next/font/google";
+import AuthProvider from "@/components/AuthProvider/AuthProvider";
 
 export const metadata: Metadata = {
   title: "NoteHub",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "NoteHub",
     description: "Personal notes management application",
-    url: "/", 
+    url: "/",
     images: [
       {
         url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
@@ -21,29 +22,31 @@ export const metadata: Metadata = {
 };
 
 const roboto = Roboto({
-  weight: ["400", "500", "700"], 
-  subsets: ["latin", "cyrillic"], 
-  variable: "--font-roboto",      
-  display: "swap",                
+  weight: ["400", "500", "700"],
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-roboto",
+  display: "swap",
 });
 
 export default function RootLayout({
   children,
-  modal, 
+  modal,
 }: {
   children: React.ReactNode;
-  modal: React.ReactNode; 
+  modal: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <body className={roboto.className}>
         <TanStackProvider>
-          <div className="wrapper">
-            <Header />
-            <main>{children}</main>
-            {modal} 
-            <Footer />
-          </div>
+          <AuthProvider>
+            <div className="wrapper">
+              <Header />
+              <main>{children}</main>
+              {modal}
+              <Footer />
+            </div>
+          </AuthProvider>
         </TanStackProvider>
       </body>
     </html>
