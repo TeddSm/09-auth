@@ -5,6 +5,8 @@ import { Metadata } from "next";
 import { getMe } from "@/lib/api/serverApi";
 import css from "./Profile.module.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Profile",
 };
