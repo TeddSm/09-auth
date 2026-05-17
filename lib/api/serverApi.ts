@@ -1,11 +1,25 @@
 import { cookies } from "next/headers";
-import { api } from "./api"; // Переконайся, що імпорт твого екземпляра Axios правильний (дефолтний чи іменований)
+import { api } from "./api";
 import type { Note } from "@/types/note";
 import { User } from "@/types/user";
+import { AxiosResponse } from "axios";
 
-interface TokenResponse {
+interface FetchNotesParams {
+  page?: number;
+  perPage?: number;
+  tag?: string;
+  search?: string;
+}
+
+interface FetchNotesResponse {
+  notes: Note[];
+  totalPages: number;
+}
+
+interface SessionResponse {
   accessToken: string;
   refreshToken: string;
+  user?: User;
 }
 
 const getAuthHeaders = async (): Promise<{ Cookie?: string }> => {
@@ -23,9 +37,11 @@ const getAuthHeaders = async (): Promise<{ Cookie?: string }> => {
   return {};
 };
 
-export const checkSession = async (): Promise<{ data: TokenResponse }> => {
+export const checkSession = async (): Promise<
+  AxiosResponse<SessionResponse>
+> => {
   const headers = await getAuthHeaders();
-  return await api.post<TokenResponse>("/auth/refresh", {}, { headers });
+  return await api.get<SessionResponse>("/auth/session", { headers });
 };
 
 export const getMe = async (): Promise<User> => {
@@ -39,18 +55,6 @@ export const fetchNoteById = async (id: string): Promise<Note> => {
   const response = await api.get<Note>(`/notes/${id}`, { headers });
   return response.data;
 };
-
-interface FetchNotesParams {
-  page?: number;
-  perPage?: number;
-  tag?: string;
-  search?: string;
-}
-
-interface FetchNotesResponse {
-  notes: Note[];
-  totalPages: number;
-}
 
 export const fetchNotes = async (
   params: FetchNotesParams = {}
