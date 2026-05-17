@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { refreshSession } from "./lib/api/serverApi";
+import { checkSession } from "./lib/api/serverApi";
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,27 +17,29 @@ export default async function proxy(request: NextRequest) {
 
   if (!accessToken && refreshToken) {
     try {
-      const tokens = await refreshSession(refreshToken);
+      const response = await checkSession();
 
-      if (tokens && tokens.accessToken) {
+      if (response && response.data && response.data.accessToken) {
         isAuthenticated = true;
 
-        const redirectResponse = NextResponse.redirect(
-          new URL(request.url, request.url)
-        );
+        const redirectResponse = NextResponse.redirect(request.nextUrl);
 
-        redirectResponse.cookies.set("accessToken", tokens.accessToken, {
+        redirectResponse.cookies.set("accessToken", response.data.accessToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
         });
 
-        if (tokens.refreshToken) {
-          redirectResponse.cookies.set("refreshToken", tokens.refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-          });
+        if (response.data.refreshToken) {
+          redirectResponse.cookies.set(
+            "refreshToken",
+            response.data.refreshToken,
+            {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+            }
+          );
         }
 
         return redirectResponse;
